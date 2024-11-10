@@ -1,0 +1,87 @@
+---
+import BaseLayout from "../layouts/base-layout.astro";
+import { prismaClient } from "../lib/prisma-client";
+
+const authToken = Astro.cookies.get("app_auth_token")?.value;
+
+if (!authToken) {
+  return Astro.redirect("/login");
+}
+
+const session = await prismaClient.session.findFirst({
+  where: {
+    id: authToken,
+    expires: {
+      gte: new Date(),
+    },
+  },
+  select: {
+    user: {
+      select: {
+        name: true,
+        email: true,
+      },
+    },
+  },
+});
+---
+
+<BaseLayout title="profile">
+  <pre>{JSON.stringify(session?.user, null, 2)}</pre>
+
+  <form
+    id="profile-form"
+    class="w-full max-w-2xl"
+    action="/api/profile"
+    method="POST"
+  >
+    <label class="block mt-5 text-gray-600" for="email">Email</label>
+    <input
+      type="text"
+      class="border-2 border-slate-400 rounded-md px-2 py-3 w-full"
+      name="email"
+      placeholder="Email"
+      value={session?.user?.email}
+      id="email"
+      readonly
+    />
+
+    <label class="block mt-5 text-gray-600" for="name">Your Name</label>
+    <input
+      type="text"
+      class="border-2 border-slate-400 rounded-md px-2 py-3 w-full"
+      name="name"
+      placeholder="Your Name"
+      value={session?.user?.name}
+      id="name"
+    />
+
+    <div class="flex justify-end my-5">
+      <button class="bg-blue-600 px-6 py-2 rounded-md text-white">Save</button>
+    </div>
+  </form>
+</BaseLayout>
+
+<script>
+  const profileForm = document.getElementById("profile-form");
+
+  profileForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target as HTMLFormElement);
+
+    const res = await fetch("/api/profile", {
+      method: "POST",
+      body: formData,
+    });
+
+    const formUpdateStatus = document.createElement("div");
+
+    formUpdateStatus.className =
+      "status px-3 my-5 text-center w-fit rounded-md py-2 flex items-center justify-center text-white";
+
+    if (res.ok) {
+      window.location.href = "/account";
+    }
+  });
+</script>

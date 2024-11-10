@@ -1,0 +1,12 @@
+---
+import LoginForm from "../components/login-form.tsx";
+import LoginGithubButton from "../components/login-github-button.astro";
+import LoginGoogleButton from "../components/login-google-button.astro";
+import BaseLayout from "../layouts/base-layout.astro";
+---
+
+<BaseLayout title="login">
+  <LoginForm client:load />
+  <LoginGoogleButton />
+  <LoginGithubButton />
+</BaseLayout>

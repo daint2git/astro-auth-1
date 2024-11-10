@@ -1,0 +1,26 @@
+---
+import BaseLayout from "../layouts/base-layout.astro";
+import { prismaClient } from "../lib/prisma-client";
+
+const authToken = Astro.cookies.get("app_auth_token")?.value;
+
+if (!authToken) {
+  return Astro.redirect("/login");
+}
+
+const session = await prismaClient.session.findFirst({
+  where: {
+    id: authToken,
+    expires: {
+      gte: new Date(),
+    },
+  },
+  select: {
+    user: true,
+  },
+});
+---
+
+<BaseLayout title="account">
+  <pre>{JSON.stringify(session?.user, null, 2)}</pre>
+</BaseLayout>
